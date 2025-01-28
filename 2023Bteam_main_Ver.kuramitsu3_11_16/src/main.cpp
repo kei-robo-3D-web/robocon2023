@@ -1,6 +1,8 @@
 //9月7日　足回りにジャイロセンサを追加
 
 #include <mbed.h>
+//以下4つのヘッダファイルは独自制作であり、著作権の関係上src内には含めない
+//そのため、独自の関数には逐一解説を付ける
 #include "f401_mdd.hpp"
 #include "cytron_md.hpp"
 #include "ps2recv_im920.hpp"
@@ -11,7 +13,7 @@
 #define EDFMAX 500
 #define EDFWAIT 500000
 
-CytronMD motorRF(PWM_1, IO_1);
+CytronMD motorRF(PWM_1, IO_1);//モータで使用するPWMピンとIOピンを宣言
 CytronMD motorLF(PWM_2, IO_2);
 CytronMD motorRB(PWM_3, IO_3);
 CytronMD motorLB(PWM_4, IO_4);
@@ -22,9 +24,9 @@ DigitalOut airCenter(AIR_3);
 DigitalOut gyroReset(PA_6);
 PwmOut green(PB_15);
 PwmOut blue(PB_0);
-swSampling edfAngleMin(PB_12);
+swSampling edfAngleMin(PB_12);//サンプリングし、チャタリング対策を行うIOピンを宣言
 PwmOut edfFan(UnitIO2);
-Serial im920(UART1_TX ,UART1_RX, BAUD);
+Serial im920(UART1_TX ,UART1_RX, BAUD);//無線通信(920MHz帯を扱うim920)の宣言
 Serial gyro(UART3_TX, UART3_RX, 115200);
 Ticker angle;
 Ticker angleSample;
@@ -77,8 +79,11 @@ float motorRFpow = 0;
 float motorLFpow = 0;
 float motorRBpow = 0;
 float motorLBpow = 0;
-int maxwheel = 30;
+int maxwheel = 70;
 
+//無線通信を行う関数
+//コントローラ(PS2のコントローラを改造した物)からボタンの情報とアナログスティックの情報を取得
+//ボタンの情報はCIRCLE(〇ボタン)やUP(上ボタン)などの変数に0or1で格納される
 void Rx(){
     if(im920.readable()){
         char getdata[RXDATASIZE] = {0};
@@ -115,9 +120,9 @@ void Sampling(){
 
 
 int main(){
-    im920.attach(&Rx, Serial::RxIrq);
+    im920.attach(&Rx, Serial::RxIrq);//無線を扱うためのシリアル通信の割り込み宣言
     gyro.attach(gyro_RX, Serial::RxIrq);
-    angleSample.attach(&Sampling, 0.01);
+    angleSample.attach(&Sampling, 0.01);//サンプリングの割り込み宣言
     edfFan.period(0.02);
     edfPower = 0;
     airFront = 0;
@@ -129,14 +134,14 @@ int main(){
     
     while(1){
         //角度調整
-        if(R1 && !(R1_flag)){
+        if(R1 && !(R1_flag)){//R1ボタンが押されたとき
             R1_flag = 1;
             anglePower = 20;
         }else if(!(R1) && (R1_flag)){
             R1_flag = 0;
             anglePower = 0;
         }
-        if(L1 && !(L1_flag)){
+        if(L1 && !(L1_flag)){//L1ボタンが押されたとき
             L1_flag = 1;
             anglePower = -20;
         }else if(!(L1) && (L1_flag)){
@@ -145,7 +150,7 @@ int main(){
         }
 
         //出力130%
-        if((UP) && !(up_flag)){
+        if((UP) && !(up_flag)){//上ボタンが押されたとき
             up_flag = 1; 
             edfCon = 750; 
             edfUpTime = 0.0067;
@@ -156,7 +161,7 @@ int main(){
         }
 
         //出力100%
-        if((LEFT) && !(down_flag)){
+        if((LEFT) && !(down_flag)){//左ボタンが押されたとき
             down_flag = 1;
             edfCon = 650;
             edfUpTime = 0.0078;
@@ -167,7 +172,7 @@ int main(){
         }
 
         //出力80%
-        if((DOWN) && !(down_flag)){
+        if((DOWN) && !(down_flag)){//下ボタンが押されたとき
             down_flag = 1;
             edfCon = 400; 
             edfUpTime = 0.0125;
@@ -177,6 +182,7 @@ int main(){
             down_flag = 0;
         }
 
+        //〇ボタンが押されたとき
         if(CIRCLE && !(circle_flag)){     //EDFを一瞬だけ出力
             circle_flag = 1;
             edfUp.attach(&edf_up,edfUpTime);
@@ -205,14 +211,14 @@ int main(){
         edfFan.pulsewidth_us(EDFMIN + edfPower);
         edfAngle.output_raw(anglePower);
 
-
+        //△ボタンが押されたとき
         if((TRIANGLE) && !(triangle_flag)){ //補助キャスタ上げ下げ
             triangle_flag = 1;
             airCenter = !(airCenter);
         }else if(!(TRIANGLE) && (triangle_flag)){
             triangle_flag = 0;
         }
-
+        //R2ボタンが押されたとき
         if((R2) && !(R2_flag)){ //足回りエアシリンダ前輪
             R2_flag = 1;
             airFront = 1;
@@ -228,7 +234,8 @@ int main(){
             R2_flag = 0;
             airFront = 0;
         }
-
+        
+        //L2ボタンが押されたとき
         if((L2) && !(L2_flag)){ //足回りエアシリンダ後輪
             L2_flag = 1;
             airBack = 1;
@@ -255,7 +262,8 @@ int main(){
             stickLX = 0;
             stickLY = 0;
         }
-
+        
+        //SELECTボタンが押されたとき
         if((SELECT) && !(select_flag)){
             select_flag = 1;
             gyroReset = 1;
@@ -265,17 +273,15 @@ int main(){
         }
 
         /*足回り*/
-        stickRX = (rounding((RIGHTX / 255.0), 0.3, 0.8, 0.5) - 0.5) * 100;
-        stickRY = (rounding((RIGHTY / 255.0), 0.3, 0.8, 0.5) - 0.5) * 100;
-        stickLX = (rounding((LEFTX / 255.0), 0.3, 0.8, 0.5) - 0.5) * 100;
+        stickRX = ((RIGHTX / 255.0) - 0.5) * 100;//右スティックのX軸の値を-50～50で取得
+        stickRY = ((RIGHTY / 255.0) - 0.5) * 100;//右スティックのY軸の値を-50～50で取得
+        stickLX = ((LEFTX  / 255.0) - 0.5) * 100;//左スティックのX軸の値を-50～50で取得
 
         arktan = fatan2(((int)stickRX),((int)stickRY));
         rad = ((gyroRecive) / 0.708);
-        vec = mysqrt(((stickRX * stickRX) + (stickRY * stickRY)),10) / 50;
-        x = (vec * myfcos((int)rad + (int)arktan));
-        y = (vec * myfsin((int)rad + (int)arktan));
-
-
+        vec = mysqrt(((stickRX * stickRX) + (stickRY * stickRY)),10) / 50;//右スティックの傾きをベクトルで取得
+        x = (vec * myfcos((int)rad + (int)arktan));//スティックの傾きのコサイン成分
+        y = (vec * myfsin((int)rad + (int)arktan));//スティックの傾きのサイン成分
 
         if(stickLX == 0){
             motorRFpow = (+x - y);
@@ -290,18 +296,18 @@ int main(){
         }
 
         //低速モード
-        if((RIGHT) && !(right_flag)){
+        if((RIGHT) && !(right_flag)){//右ボタンが押されたとき
             right_flag = 1;
-            maxwheel = 70;
+            maxwheel = 30;
         }else if(!(RIGHT) && (right_flag)){
             right_flag = 0;
-            maxwheel = 30;
+            maxwheel = 70;
         }
 
-        motorRF.output_raw(limit(motorRFpow * 100 * 1.1 , maxwheel));
-        motorLF.output_raw(limit(motorLFpow * 100       , maxwheel));
-        motorRB.output_raw(limit(motorRBpow * 100 * 1.2 , maxwheel));
-        motorLB.output_raw(limit(motorLBpow * 100 * 1.6 , maxwheel));
+        motorRF.output_raw(limit(motorRFpow * 100 * 1.1 , maxwheel));//宣言したモータに-maxwheel～maxwheelの範囲で出力
+        motorLF.output_raw(limit(motorLFpow * 100       , maxwheel));//宣言したモータに-maxwheel～maxwheelの範囲で出力
+        motorRB.output_raw(limit(motorRBpow * 100 * 1.2 , maxwheel));//宣言したモータに-maxwheel～maxwheelの範囲で出力
+        motorLB.output_raw(limit(motorLBpow * 100 * 1.6 , maxwheel));//宣言したモータに-maxwheel～maxwheelの範囲で出力
 
         wait_us(1000);
     }
