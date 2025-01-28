@@ -305,9 +305,9 @@ int main(){
         }
 
         motorRF.output_raw(limit(motorRFpow * 100 * 1.1 , maxwheel));//宣言したモータに-maxwheel～maxwheelの範囲で出力
-        motorLF.output_raw(limit(motorLFpow * 100       , maxwheel));//宣言したモータに-maxwheel～maxwheelの範囲で出力
-        motorRB.output_raw(limit(motorRBpow * 100 * 1.2 , maxwheel));//宣言したモータに-maxwheel～maxwheelの範囲で出力
-        motorLB.output_raw(limit(motorLBpow * 100 * 1.6 , maxwheel));//宣言したモータに-maxwheel～maxwheelの範囲で出力
+        motorLF.output_raw(limit(motorLFpow * 100       , maxwheel));
+        motorRB.output_raw(limit(motorRBpow * 100 * 1.2 , maxwheel));
+        motorLB.output_raw(limit(motorLBpow * 100 * 1.6 , maxwheel));
 
         wait_us(1000);
     }
