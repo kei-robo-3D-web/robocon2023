@@ -66,7 +66,7 @@ float x = 0.0,y = 0.0;
 float vec = 0.0;
 uint8_t gyroRecive = 0;
 int rad = 0;
-/*------前田氏追加 (9/26 limitsw追加)------*/
+
 int mflim_f = 0;
 int flim_f = 0;
 int mblim_f = 0;
@@ -216,7 +216,7 @@ int main(){
         if((R2) && !(R2_flag)){ //足回りエアシリンダ前輪
             R2_flag = 1;
             airFront = 1;
-        /////前田氏追加分
+
         }else if((R2) && (R2_flag)){
             if(edfAngleMin.state != 1){
                 anglePower = -10;
@@ -232,7 +232,7 @@ int main(){
         if((L2) && !(L2_flag)){ //足回りエアシリンダ後輪
             L2_flag = 1;
             airBack = 1;
-        /////前田氏追加分
+
         }else if((L2) && (L2_flag)){
             if(edfAngleMin.state != 1){
                 anglePower = -10;
